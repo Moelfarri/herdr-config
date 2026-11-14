@@ -35,8 +35,14 @@ Each one is a clone of a shipped mod that I changed, or a new one.
     moment, in `themes/art/sky/live/`.
 - `mods/spaces-flat` (from `spaces`): a flat Spaces list with coloured
   avatars, each repo's branch and ahead/behind, machines as groups, drag to
-  reorder. It takes tabs and agents dropped on a space. Each space keeps its
-  own theme.
+  reorder. Each space keeps its own theme. A space (other than the one shown)
+  with agents that need you is flagged: tinted in the most urgent status
+  colour, a bar on its edge, and a pill such as "2 need you". It publishes
+  where its rows are (shared `space.targets`) for `space-drag`.
+- `mods/space-drag` (new): the drag layer. When an agent or a tab is dragged
+  out of its list, a frameless window over the whole window draws its card
+  under the pointer and lights up the space it would land on. Let go on a
+  space and it moves there; anywhere else, or Esc, and nothing happens.
 - `mods/space-menu` (from `menu`): the right-click menus for spaces, tabs and
   panes. Adds "Theme..." per space (Standard, Custom, Herdr) and "Move to".
 - `mods/tabs-drag` (from `tabs`): the tab bar. Drag a tab to reorder, or out
@@ -62,8 +68,9 @@ from Herdr's own.
 ### Scripts
 
 - `bin/move-to-space.py`: moves a tab, or one pane, to another space. Herdr
-  has no command for this. `spaces-flat`, `space-menu` and `agents-spaces` call
-  it.
+  has no command for this, so it edits Herdr's layout document in herdr-core
+  (`hc connect`, version-checked) and relabels the terminals. `space-drag`
+  and `space-menu` call it.
 - `bin/claude-progress.py`: a Claude Code `PostToolUse` hook. It writes the
   session's task-list progress as a label on its Herdr terminal, and
   `agents-spaces` draws it as a progress bar.

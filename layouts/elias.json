@@ -122,7 +122,7 @@
                 }
               },
               "background": {
-                "image": "themes/art/sky/live/sm24d-mm3dp4-c6dry0.svg",
+                "image": "themes/art/sky/live/sm27d-mm3dp4-c6dry0.svg",
                 "fit": "cover"
               }
             },
@@ -182,16 +182,6 @@
         }
       ],
       "resizable": false
-    },
-    {
-      "id": "ba67139ab2df99e2e20695a0455f5ce9a",
-      "type": "block",
-      "content": {
-        "mod": "space-drag"
-      },
-      "size": {
-        "px": 320
-      }
     }
   ],
   "background": "canvas",

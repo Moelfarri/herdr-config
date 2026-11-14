@@ -29,9 +29,10 @@
 //   behind the terminal area, the live sky behind it (backdrop.js edits the shown
 //   layout for it, and puts the person's own values back for other themes).
 // - Drag an agent within Working or Idle to reorder: it moves the agent's tab (tab.move).
-// - Drag an agent out of the list onto a space in the Spaces list to move it there
-//   (shared "space.drag", see spaces-flat): its tab goes, or only its pane when it shares
-//   the tab with other panes. Or right-click it > Move to (space-menu's space list).
+// - Drag an agent out of the list onto a space in the Spaces list to move it there: its
+//   card goes on over the whole window (the drag layer, space-drag), and its tab moves,
+//   or only its pane when it shares the tab with other panes. Or right-click it > Move to
+//   (space-menu's space list).
 // - Right-click an agent for priority and progress. Both live on the terminal as labels:
 //   `prio` (high | medium | low), `progress` (reported by the agent, "3/7" or "40%")
 //   and `progress.manual` (set here, a percent; wins over the agent's).
@@ -271,7 +272,24 @@ export default class AgentsBySpace extends View {
     const b = e.bounds;
     this.dragging = false;
     this.lift = null;
-    this.grab = { can, y: e.position.y, dy: b ? e.position.y - b.y : 15, x: b ? b.x : null, w: b ? b.width : null, h: b ? b.height : 30 };
+    this.grab = { can, y: e.position.y, px: e.position.x, dy: b ? e.position.y - b.y : 15, x: b ? b.x : null, w: b ? b.width : null, h: b ? b.height : 30 };
+    this.lastPos = e.position;
+  }
+
+  // The pressed agent left the list: its card goes on over the whole window (space-drag)
+  // until it is let go, on a space (moved there) or anywhere else (nothing).
+  startSpaceDrag(what) {
+    const f = focused();
+    const g = this.grab ?? {};
+    const grab = { dx: g.x != null ? g.px - g.x : 20, dy: g.dy ?? 15, w: g.w ?? 236, h: g.h ?? 30 };
+    setShared("space.drag", what);
+    try {
+      openOverlay({ mod: "space-drag", kind: "window", frame: "none", width: 1, height: 1, at: { x: 0, y: 0 },
+        props: { what, grab, at: this.lastPos ?? null, before: { terminal: f?.terminal ?? null, pane: f?.pane ?? null } } });
+    } catch (e) {
+      setShared("space.drag", null);
+      console.log(`space-drag: couldn't open (${e})`);
+    }
   }
 
   endDrag() {
@@ -718,6 +736,8 @@ export default class AgentsBySpace extends View {
         .when(this.dragging, (el) => el.cursor_grabbing())
         .when(landing, (el) => el.bg(t.accent + "1f"))
         .when(lifting, (el) => el.opacity(0.25))
+        // Its card is out over the window (space-drag): its place fades.
+        .when(shared("space.drag")?.terminal === a.address, (el) => el.opacity(0.3))
         .when(Boolean(prio), (el) => el.child(div().absolute().left(0).top(8).bottom(8).w(3).rounded(2).bg(prio.color)))
         .on_hover((on, cx) => {
           if (on) this.hovered = a.address;
@@ -899,6 +919,7 @@ export default class AgentsBySpace extends View {
       // where it can land: an agent under Working or Idle); from then on its card
       // follows the pointer, kept between the title and the bottom.
       .on_mouse_move((e, cx) => {
+        if (this.pressed) this.lastPos = e.position;
         if (!this.pressed || !this.grab?.can) return;
         if (!this.dragging && Math.abs(e.position.y - this.grab.y) < 4) return;
         this.dragging = true;
@@ -911,18 +932,13 @@ export default class AgentsBySpace extends View {
         };
         cx.notify();
       })
-      // Dragged out of the list: the drag goes on to the Spaces list, which moves the
-      // agent to the space it is let go on (or nothing, let go anywhere else).
+      // Dragged out of the list: its card goes on over the whole window (space-drag).
       .on_hover((on, cx) => {
         if (on || !this.pressed) return;
         const what = this.dragInfo?.get(this.pressed);
-        if (what) setShared("space.drag", { ...what, source: "agents", at: Date.now() });
+        if (what) this.startSpaceDrag(what);
         this.endDrag();
         cx.notify();
-      })
-      // Brought back and let go here: not moved.
-      .on_mouse_up("left", () => {
-        if (shared("space.drag")?.source === "agents") setShared("space.drag", null);
       })
       // The title: whose agents these are, in a bar of that space's color.
       .when(!collapsed, (el) =>
