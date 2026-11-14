@@ -1,0 +1,49 @@
+# Whitelist: Herdr keeps writing state into this folder, so ignore
+# everything and only let my own files through.
+/*
+!/.gitignore
+!/README.md
+!/keys.json
+!/settings.json
+
+# My layout (not Herdr's main, terminals or win98, and never .state/).
+!/layouts/
+/layouts/*
+!/layouts/elias.json
+
+# Mods I made or changed. Every other mod is Herdr's.
+!/mods/
+/mods/*
+!/mods/agent-history/
+!/mods/agents-spaces/
+!/mods/space-drag/
+!/mods/space-menu/
+!/mods/spaces-flat/
+!/mods/tabs-drag/
+# Written by Herdr into every mod folder.
+/mods/*/gpui-kit.d.ts
+/mods/*/jsconfig.json
+
+# My themes and their art (not the live sky images or Herdr's themes).
+!/themes/
+/themes/*
+!/themes/custom-*.json
+!/themes/art/
+/themes/art/*
+!/themes/art/custom-*.svg
+!/themes/art/custom-*.decor
+!/themes/art/backdrops/
+
+# The Yuji Boku font (OFL) and my helper scripts.
+!/fonts/
+!/bin/
+
+# Never, wherever they appear.
+*.error
+*.reset-*
+*.old-*
+*-edited
+*.corrupt-*
+.DS_Store
+__pycache__/
+*.pyc

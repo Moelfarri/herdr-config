@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 160 320" width="160" height="320">
+  <!-- For the custom-bamboo-ink theme: bamboo in pale ink (sumi-e), a sakura branch
+       coming in from the right with a few blossoms, and petals falling. Drawn very
+       faint behind the agents list, so text over it stays easy to read. -->
+  <defs>
+    <!-- One sakura blossom: five petals around a small red heart. -->
+    <g id="blossom">
+      <ellipse cx="0" cy="-3.4" rx="2.5" ry="3.4"/>
+      <ellipse cx="0" cy="-3.4" rx="2.5" ry="3.4" transform="rotate(72)"/>
+      <ellipse cx="0" cy="-3.4" rx="2.5" ry="3.4" transform="rotate(144)"/>
+      <ellipse cx="0" cy="-3.4" rx="2.5" ry="3.4" transform="rotate(216)"/>
+      <ellipse cx="0" cy="-3.4" rx="2.5" ry="3.4" transform="rotate(288)"/>
+    </g>
+  </defs>
+
+  <!-- Bamboo, pale ink: far, middle and front stalk, each a little stronger. -->
+  <g fill="#e6dccb">
+    <g fill-opacity="0.035">
+      <rect x="66" y="120" width="6" height="60" rx="2"/>
+      <rect x="66" y="184" width="6" height="62" rx="2"/>
+      <rect x="66" y="250" width="6" height="70" rx="2"/>
+      <rect x="64.5" y="181" width="9" height="2" rx="1"/>
+      <rect x="64.5" y="247" width="9" height="2" rx="1"/>
+      <path d="M66 182 Q49.3 185.4 36 196 Q52.7 192.6 66 182 Z"/>
+    </g>
+    <g fill-opacity="0.055">
+      <rect x="128" y="96" width="7" height="44" rx="2.5"/>
+      <rect x="128" y="144" width="7" height="70" rx="2.5"/>
+      <rect x="128" y="218" width="7" height="64" rx="2.5"/>
+      <rect x="128" y="286" width="7" height="34" rx="2.5"/>
+      <rect x="126.5" y="141" width="10" height="2" rx="1"/>
+      <rect x="126.5" y="215" width="10" height="2" rx="1"/>
+      <rect x="126.5" y="283" width="10" height="2" rx="1"/>
+      <path d="M135 142 Q149.9 152 158 168 Q143.1 158 135 142 Z"/>
+    </g>
+    <g fill-opacity="0.08">
+      <rect x="100" y="64" width="9" height="40" rx="3"/>
+      <rect x="100" y="108" width="9" height="78" rx="3"/>
+      <rect x="100" y="190" width="9" height="68" rx="3"/>
+      <rect x="100" y="262" width="9" height="58" rx="3"/>
+      <rect x="98" y="105" width="13" height="2" rx="1"/>
+      <rect x="98" y="187" width="13" height="2" rx="1"/>
+      <rect x="98" y="259" width="13" height="2" rx="1"/>
+      <path d="M109 106 Q134 110.5 154 126 Q129 121.5 109 106 Z"/>
+      <path d="M100 188 Q76.4 192.6 58 208 Q81.6 203.4 100 188 Z"/>
+      <path d="M100 190 Q83.6 178.8 64 176 Q80.4 187.2 100 190 Z"/>
+    </g>
+  </g>
+
+  <!-- The sakura branch, pale ink, from the right edge. -->
+  <g fill="none" stroke="#e6dccb" stroke-linecap="round" stroke-opacity="0.11">
+    <path d="M162 30 C140 34 120 44 98 46 C86 47 74 52 62 60" stroke-width="2.6"/>
+    <path d="M126 41 C122 52 116 60 108 66" stroke-width="1.6"/>
+    <path d="M98 46 C94 38 88 33 80 30" stroke-width="1.4"/>
+  </g>
+
+  <!-- Blossoms on the branch, and a few buds. -->
+  <g fill="#f2a7bf" fill-opacity="0.34">
+    <use xlink:href="#blossom" href="#blossom" transform="translate(140 30) scale(1.1)"/>
+    <use xlink:href="#blossom" href="#blossom" transform="translate(112 46) rotate(20)"/>
+    <use xlink:href="#blossom" href="#blossom" transform="translate(106 68) scale(0.9) rotate(40)"/>
+    <use xlink:href="#blossom" href="#blossom" transform="translate(80 29) scale(0.85) rotate(10)"/>
+    <use xlink:href="#blossom" href="#blossom" transform="translate(64 59) scale(1.05) rotate(30)"/>
+    <circle cx="124" cy="52" r="1.8"/>
+    <circle cx="90" cy="49" r="1.6"/>
+  </g>
+  <g fill="#c94a5c" fill-opacity="0.4">
+    <circle cx="140" cy="30" r="1"/>
+    <circle cx="112" cy="46" r="0.9"/>
+    <circle cx="106" cy="68" r="0.8"/>
+    <circle cx="80" cy="29" r="0.8"/>
+    <circle cx="64" cy="59" r="0.9"/>
+  </g>
+
+  <!-- Petals falling, fainter as they fall. -->
+  <g fill="#f2a7bf">
+    <ellipse rx="2" ry="3.1" transform="translate(52 96) rotate(35)" fill-opacity="0.28"/>
+    <ellipse rx="1.8" ry="2.8" transform="translate(88 132) rotate(-20)" fill-opacity="0.24"/>
+    <ellipse rx="2" ry="3" transform="translate(40 158) rotate(60)" fill-opacity="0.22"/>
+    <ellipse rx="1.7" ry="2.7" transform="translate(120 186) rotate(15)" fill-opacity="0.2"/>
+    <ellipse rx="1.9" ry="2.9" transform="translate(70 226) rotate(-45)" fill-opacity="0.18"/>
+    <ellipse rx="1.6" ry="2.6" transform="translate(30 262) rotate(25)" fill-opacity="0.16"/>
+    <ellipse rx="1.8" ry="2.8" transform="translate(140 296) rotate(70)" fill-opacity="0.14"/>
+  </g>
+</svg>

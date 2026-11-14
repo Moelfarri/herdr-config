@@ -1,0 +1,11 @@
+{
+  "about": "Decor for the custom-bamboo-ink theme, read by the agents-spaces mod (JSON). font: a brush font in ~/.config/herdr-app/fonts. titles: brush title per space name on the title card (title: for any other space). calligraphy: faint vertical brush text at the bottom left, only where the list leaves room. seal: the red seal on the title card. states: one kanji before each state.",
+  "font": "Yuji Boku",
+  "title": "竹林",
+  "titles": { "Dagens arbeid": "今日の仕事" },
+  "calligraphy": "風林火山",
+  "seal": "風",
+  "seal_color": "#b9382e",
+  "seal_text": "#f6efe2",
+  "states": { "attention": "急", "working": "動", "idle": "静" }
+}
