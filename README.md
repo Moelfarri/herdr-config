@@ -44,10 +44,20 @@ Each one is a clone of a shipped mod that I changed, or a new one.
   under the pointer and lights up the space it would land on. Let go on a
   space and it moves there; anywhere else, or Esc, and nothing happens.
 - `mods/space-menu` (from `menu`): the right-click menus for spaces, tabs and
-  panes. Adds "Theme..." per space (Standard, Custom, Herdr) and "Move to".
+  panes. Adds "Theme..." per space (Standard, Custom, Herdr) and "Move to",
+  and "Clear PR" on a tab that carries a pull-request badge it should not have
+  (a session that only read somebody else's).
 - `mods/tabs-drag` (from `tabs`): the tab bar. Drag a tab to reorder, or out
   of the bar onto a space to move it. Scroll up or down to switch tabs. The
   side panel (Files, Changes, History) is remembered per space.
+  Sessions that have opened a pull request carry its number (`#69`) in the
+  colour of what became of it: accent for open, grey for a draft, green for
+  merged. A button at the start of the bar shows how many there are and opens
+  them as a menu (`pr-menu`). `PR_SPACES` in the mod says which spaces have the
+  button ("Dagens arbeid"). It runs `bin/pr-tabs.py` every half minute.
+- `mods/pr-menu` (new): the tab bar's pull-request menu. One row per tab with a
+  pull request; click a row (or Enter) to go to that tab. It never closes a
+  tab or ends a session: you do that yourself.
 - `mods/agent-history` (new): closed Claude Code and Codex conversations,
   newest first, to resume one in a new tab. A popup (Cmd-Y) and a side panel.
   `history.py` reads `~/.claude/projects` and `~/.codex` on this computer
@@ -71,6 +81,16 @@ from Herdr's own.
   has no command for this, so it edits Herdr's layout document in herdr-core
   (`hc connect`, version-checked) and relabels the terminals. `space-drag`
   and `space-menu` call it.
+- `bin/pr-tabs.py`: the pull-request sweep the tab bar runs. It reads the
+  screen of every agent whose turn has ended, takes the pull request URL it
+  shows, and writes it on that Herdr terminal as the labels `pr`, `pr.url` and
+  `pr.state` (asked of `gh` at most every three minutes). This is what covers
+  Codex and any other agent without hooks. "Clear PR" in a tab's right-click
+  menu takes the labels off and leaves that tab alone (`pr.off`).
+- `bin/claude-pr.py`: a Claude Code `PostToolUse` hook (Bash). It writes the
+  same labels the moment a session opens a pull request — the URL a command
+  printed, unless the command only read pull requests (`gh pr list`, `gh pr
+  view`, ...), so opening one through a script counts too.
 - `bin/claude-progress.py`: a Claude Code `PostToolUse` hook. It writes the
   session's task-list progress as a label on its Herdr terminal, and
   `agents-spaces` draws it as a progress bar.
@@ -120,6 +140,17 @@ You need Herdr, `python3`, and Herdr's `hc` command on your `PATH`.
            { "type": "command", "command": "python3 -I ~/.config/herdr-app/bin/claude-progress.py", "timeout": 10 }
          ]
        }
+     ]
+   }
+   ```
+
+   And for the pull-request badges, in the same `"PostToolUse"` list:
+
+   ```json
+   {
+     "matcher": "Bash",
+     "hooks": [
+       { "type": "command", "command": "python3 -I ~/.config/herdr-app/bin/claude-pr.py", "timeout": 10 }
      ]
    }
    ```

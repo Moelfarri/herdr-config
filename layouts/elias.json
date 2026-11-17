@@ -122,7 +122,7 @@
                 }
               },
               "background": {
-                "image": "themes/art/sky/live/sm27d-mm3dp4-c6dry0.svg",
+                "image": "themes/art/sky/live/s6x284y98-m1p5x58y150p6-c0dry0.svg",
                 "fit": "cover"
               }
             },
@@ -189,7 +189,6 @@
     14,
     12
   ],
-  "terminal_opacity": 0.6,
   "divider": {
     "width": 1,
     "color": "border"
@@ -198,5 +197,6 @@
   "traffic_lights": [
     12,
     16
-  ]
+  ],
+  "terminal_opacity": 0.6
 }

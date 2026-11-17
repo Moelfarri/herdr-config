@@ -15,6 +15,7 @@
 !/mods/
 /mods/*
 !/mods/agent-history/
+!/mods/pr-menu/
 !/mods/agents-spaces/
 !/mods/space-drag/
 !/mods/space-menu/

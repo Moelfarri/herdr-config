@@ -12,6 +12,12 @@
 // Only themes for the appearance shown now (light or dark) are listed. The choice goes to
 // shared "space.themes".spaces[<space id>]; the Spaces list shows it when that space is.
 //
+// A tab whose agent opened a pull request carries it as labels on its terminals (the tab
+// bar draws the badge, bin/pr-tabs.py writes them): its menu then has "Clear PR", which
+// takes the labels off, for a tab that only read somebody else's pull request. The sweep
+// leaves that tab alone from then on (`pr.off`); a pull request the session opens itself
+// brings the badge back.
+//
 // A tab's menu has "Move to", and so has an agent's (the agents-spaces menu opens this
 // one): a submenu beside it (tab "move-to", target { tab | pane, space, name }, parent:
 // the menu's overlay) lists the spaces on the same machine; choosing one moves the tab,
@@ -124,6 +130,12 @@ async function checkout(folder, on) {
   return common.stdout.trim() === `${top.stdout.trim()}/.git` ? "main" : "linked";
 }
 
+// The terminals in a tab that carry a pull request (the tab bar's badge).
+function prTerminals(tab) {
+  const bare = (id) => String(id ?? "").split("/").pop();
+  return terminals().filter((t) => t.labels?.pr && bare(t.labels["herdr.tab"]) === bare(tab));
+}
+
 function items(p, git) {
   p = p ?? {};
   const tg = p.target ?? {};
@@ -162,6 +174,7 @@ function items(p, git) {
         ["Rename", "tab.rename", { id: tg.id }],
         ["New tab", "tab.new", { space: tg.space }],
         ["Move to", "space.move-to.menu", { tab: tg.id, space: tg.space }],
+        ...(prTerminals(tg.id).length ? [["Clear PR", "tab.pr.clear", { id: tg.id }]] : []),
         ["Close", "tab.close", { id: tg.id }],
       ];
     case "move-to":
@@ -189,7 +202,7 @@ function items(p, git) {
 }
 
 function menuIcon(command) {
-  const name = command.endsWith(".close") ? "x" : command.endsWith(".rename") ? "square-pen" : command.endsWith(".new") ? "plus" : command === "worktree" ? "git-branch" : command === "app.help" ? "terminal" : command === "app.theme" || command === "space.theme.menu" ? "settings" : command === "pane.split" ? "panel-right" : command === "pane.zoom" ? "square" : command === "space.move-to.menu" ? "layers" : "terminal";
+  const name = command === "tab.pr.clear" ? "minus" : command.endsWith(".close") ? "x" : command.endsWith(".rename") ? "square-pen" : command.endsWith(".new") ? "plus" : command === "worktree" ? "git-branch" : command === "app.help" ? "terminal" : command === "app.theme" || command === "space.theme.menu" ? "settings" : command === "pane.split" ? "panel-right" : command === "pane.zoom" ? "square" : command === "space.move-to.menu" ? "layers" : "terminal";
   return `mods/workspace-chrome/${name}.svg`;
 }
 
@@ -255,6 +268,13 @@ export default class Menu extends View {
       return;
     }
     closeOverlay(props()?.overlay);
+    // Not Herdr's command, but labels on the tab's terminals.
+    if (it[1] === "tab.pr.clear") {
+      for (const term of prTerminals(it[2].id)) {
+        exec("hc", ["label", term.address, "pr=", "pr.url=", "pr.state=", "pr.checked=", "pr.off=1"]).catch((e) => console.log(`clear pr: ${e}`));
+      }
+      return;
+    }
     if (it[1] === "space.theme") setSpaceTheme(it[2].space, it[2].name);
     else if (it[1] === "space.theme.menu") {
       // As tall as its rows and section titles; height is only the most.

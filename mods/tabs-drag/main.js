@@ -5,10 +5,18 @@
 // over the whole window (the drag layer, space-drag): let go on a space in the Spaces
 // list and the tab moves there, anywhere else and nothing happens. Right-click a tab for
 // its menu (space-menu: with "Move to").
+//
+// Tabs whose agent has opened a pull request carry its number (`#69`, tinted by what
+// became of it), and the button at the start of the bar opens them as a menu (pr-menu):
+// those sessions are finished, or nearly, so that menu is the list of tabs to look over
+// and close. What a tab knows comes from its terminal's labels (`pr`, `pr.url`,
+// `pr.state`), written by `bin/claude-pr.py` when a session opens one and by
+// `bin/pr-tabs.py`, which this bar runs every half minute. Spaces in `PR_SPACES` have the
+// button; "Clear PR" in a tab's menu takes a badge off again.
 
 import { View, div, svg, image } from "gpui-kit";
 import { h_flex, v_flex } from "gpui-base";
-import { spaces, panes, run, openOverlay, theme, window, shared, setShared, layout, settings, focused } from "herdr";
+import { spaces, panes, terminals, run, openOverlay, theme, window, shared, setShared, layout, settings, focused, exec, appHome } from "herdr";
 
 function find(node, id) {
   if (node?.id === id) return node;
@@ -17,6 +25,28 @@ function find(node, id) {
     if (found) return found;
   }
   return null;
+}
+
+// The spaces whose pull-request tabs the bar's button lists, by name or by id.
+const PR_SPACES = ["Dagens arbeid"];
+// How often the sweep (bin/pr-tabs.py) looks for a pull request on an agent's screen.
+const PR_SWEEP = 30000;
+// What became of a pull request, in the badge's color: still to look at, or done with.
+const PR_COLORS = { OPEN: "accent", DRAFT: "muted", MERGED: "done", CLOSED: "dim", UNKNOWN: "accent" };
+
+// Remote ids carry a machine prefix; a label on that machine omits it.
+const bare = (id) => String(id ?? "").split("/").pop();
+
+// A tab's pull request, from the labels on the terminals in it (bin/pr-tabs.py).
+function pullRequests(space) {
+  const found = new Map();
+  if (!space || !PR_SPACES.some((p) => p === space.name || p === space.id)) return found;
+  for (const term of terminals()) {
+    const labels = term.labels ?? {};
+    if (!labels.pr || !labels["herdr.tab"]) continue;
+    found.set(bare(labels["herdr.tab"]), { number: labels.pr, state: (labels["pr.state"] ?? "UNKNOWN").toUpperCase() });
+  }
+  return found;
 }
 
 // A tab's title, the same rule as the agents sidebar (mods/agents-spaces): a tab nobody
@@ -43,7 +73,7 @@ function title(tab, l) {
 }
 
 export default class Tabs extends View {
-  init() {
+  init(_props, cx) {
     // A drag: the tab pressed, the one under the pointer, where it was grabbed, and
     // once the pointer has moved a few px, `dragging` with where the lifted tab is.
     this.pressed = null;
@@ -55,6 +85,25 @@ export default class Tabs extends View {
     // a tab, and when its last event came.
     this.swipe = null;
     this.panels = JSON.parse(localStorage.getItem("panels") ?? "{}");
+    // Agents that opened a pull request, found on their screen and kept as labels. The
+    // Claude Code hook labels its own terminal at once; this covers every other agent.
+    this.sweeping = false;
+    cx.timer.after(2000, (cx) => this.sweep(cx));
+    cx.timer.every(PR_SWEEP, (cx) => this.sweep(cx));
+  }
+
+  sweep(cx) {
+    if (this.sweeping) return;
+    this.sweeping = true;
+    cx.spawn(async (cx) => {
+      try {
+        await exec("python3", ["-I", `${appHome()}/bin/pr-tabs.py`], { timeout: 120000 });
+      } catch (e) {
+        console.log(`pr-tabs: couldn't run it (${e})`);
+      }
+      this.sweeping = false;
+      cx.notify();
+    });
   }
 
   // Where on the tab it was grabbed (window coordinates, as Solitaire does), so the
@@ -99,6 +148,36 @@ export default class Tabs extends View {
       .h(this.grab.h).px(10).items_center()
       .rounded(7).bg(t.raised ?? t.selected).border_1().border_color(t.accent).shadow_lg()
       .child(content);
+  }
+
+  // What a tab's pull request looks like: its number, in the color of what became of it
+  // (open: to look at; merged or closed: done with, so the tab can go).
+  badge(t, pr) {
+    const color = t[PR_COLORS[pr.state] ?? "accent"] ?? t.accent;
+    return div().flex_none().px(5).h(16).rounded(5).bg(color + "26").text_size(10.5).font_semibold()
+      .text_color(color).flex().items_center().child(`#${pr.number}`);
+  }
+
+  // The pull-request button: how many tabs have one, in the color of the nearest thing to
+  // be done with (an open pull request waits for the person; a merged one does not).
+  prButton(t, ready, names) {
+    const open = ready.some((c) => ["OPEN", "DRAFT", "UNKNOWN"].includes(this.prState(c)));
+    const color = open ? t.accent : (t.done ?? t.accent);
+    return h_flex().id("tab-prs").flex_none().h(26).px(8).gap(6).items_center().rounded(7)
+      .bg(color + "1f").text_color(color).text_size(12).font_semibold()
+      .hover(s => s.bg(color + "33"))
+      // A click carries no bounds, so the menu opens under where the button was pressed.
+      .on_mouse_down("left", (e, cx) => { cx.stop_propagation(); this.prAt = e.bounds ?? null; })
+      .on_click(() => openOverlay({ mod: "pr-menu", kind: "popup", width: 340,
+        height: Math.min(10 + 27 + ready.length * 31, 420),
+        at: this.prAt ? { x: this.prAt.x, y: this.prAt.y + this.prAt.height + 4 } : "pointer",
+        props: { space: this.prSpace, names } }))
+      .child(svg("mods/workspace-chrome/git-branch.svg").size(13).flex_none())
+      .child(`${ready.length}`);
+  }
+
+  prState(c) {
+    return this.prStates?.get(bare(c.id)) ?? "UNKNOWN";
   }
 
   // Where a drop lands: a dot and a line on the target tab's edge, inside its padding
@@ -152,7 +231,11 @@ export default class Tabs extends View {
     const leads = leadPanes(panes());
     // What a tab dragged out of the bar takes along to the Spaces list.
     this.dragInfo = new Map();
-    const item = (c, i) => {
+    // What each tab is called here, for the pull-request menu.
+    this.prNames = {};
+    const item = (c, opts) => {
+      const i = shown.indexOf(c);
+      const pr = opts?.pr ?? null;
       const program = panes().find(p => p.tab === c.id && p.program?.agent)?.program ?? panes().find(p => p.tab === c.id)?.program;
       const auto = /^tb\d+$/.test(c.name) ? program?.name ?? "Terminal" : c.name;
       const name = title({ ...c, name: auto }, leads.get(c.id));
@@ -162,10 +245,12 @@ export default class Tabs extends View {
       // the lifted copy built from it takes no hitbox.
       const face = (el) => el
         .when(Boolean(program?.icon), el => el.child(program.tint ? svg(program.icon).size(14).text_color(t.muted) : image(program.icon).size(14)))
-        .child(div().max_w(170).truncate().child(c.zoomed ? `${name} Z` : name))
+        .child(div().max_w(pr ? 120 : 170).truncate().child(c.zoomed ? `${name} Z` : name))
+        .when(Boolean(pr), el => el.child(this.badge(t, pr)))
         .when(c.status === "working", el => el.child(svg("mods/workspace-chrome/spinner.svg").size(12).flex_none().text_color(t.working).spin(900)))
         .when(c.status === "blocked" || c.status === "done", el => el.child(div().size(6).rounded(3).bg(t[c.status])));
       if (lifting) ghost = face(h_flex().gap(7).items_center().text_size(12.8).text_color(t.foreground));
+      this.prNames[bare(c.id)] = name;
       this.dragInfo.set(c.id, { kind: "tab", tab: c.id, space: space.id, machine: space.machine ?? null, name, icon: program?.icon ?? null, tint: Boolean(program?.tint) });
       return face(h_flex().id(`tab-${c.id}`).relative().h(29).px(10).gap(7).rounded(7).items_center().flex_none().text_size(12.8)
         .border(1).border_color(c.active ? t.border : t.chrome).bg(c.active ? t.raised : t.chrome).text_color(c.active ? t.foreground : t.muted)
@@ -194,7 +279,7 @@ export default class Tabs extends View {
           else if (!moved) run("tab.select", { id: c.id });
           cx.notify();
         })
-        .on_mouse_down("right", (_e, cx) => { cx.stop_propagation(); openOverlay({ mod: "space-menu", kind: "popup", width: 200, height: 170, props: { tab: "tab", target: { id: c.id, space: space.id, name } } }); }))
+        .on_mouse_down("right", (_e, cx) => { cx.stop_propagation(); openOverlay({ mod: "space-menu", kind: "popup", width: 200, height: pr ? 205 : 170, props: { tab: "tab", target: { id: c.id, space: space.id, name } } }); }))
         .when(c.active, el => el.child(div().id(`close-${c.id}`).text_color(t.dim).on_mouse_down("left", stop).on_click((_e, cx) => { cx.stop_propagation(); run("tab.close", { id: c.id }); }).child(svg("mods/pane/close.svg").size(12))))
         .when(landing, el => el.child(this.marker(t, fromIndex < i)));
     };
@@ -219,7 +304,13 @@ export default class Tabs extends View {
           else { run("layout.select", { stack: "panel-body", child: id }); run("layout.show", { id: "panel" }); }
         }).child(svg(icon).size(14)).child(label);
     };
-    const tabs = shown.map(item);
+    // Sessions that opened a pull request are finished, or nearly: the button at the start
+    // of the bar opens them as a menu, so the tabs to close are always one click away.
+    const prs = pullRequests(space);
+    this.prStates = new Map([...prs].map(([id, pr]) => [id, pr.state]));
+    this.prSpace = space?.id ?? null;
+    const ready = shown.filter((c) => prs.has(bare(c.id)));
+    const tabs = shown.map((c) => item(c, { pr: prs.get(bare(c.id)) ?? null }));
     return h_flex().id("tabs-root").relative().size_full().min_w(0).px(10).pl(lightsPadding).gap(3).items_center().bg(t.chrome).border_b(1).border_color(t.border)
       .when(this.dragging, el => el.cursor_grabbing())
       // A drag starts once the pointer has moved a few px from the press; from then on
@@ -266,6 +357,9 @@ export default class Tabs extends View {
         this.swipe.done = true;
         run(this.swipe.y > 0 ? "tab.prev" : "tab.next");
       })
+      .when(ready.length > 0, el => el
+        .child(this.prButton(t, ready, this.prNames))
+        .child(div().flex_none().w(1).h(16).mx(2).rounded(1).bg(t.border)))
       .child(h_flex().id("tab-scroll").flex_1().min_w(0).h_full().items_center().gap(3).overflow_x_scrollbar().children(tabs))
       .child(button("tab-new", "+", () => openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 })))
       .when(enabled.includes("files"), el => el.child(panelButton("files", "Files", "mods/files/file.svg")))
