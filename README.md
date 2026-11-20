@@ -58,6 +58,14 @@ Each one is a clone of a shipped mod that I changed, or a new one.
 - `mods/pr-menu` (new): the tab bar's pull-request menu. One row per tab with a
   pull request; click a row (or Enter) to go to that tab. It never closes a
   tab or ends a session: you do that yourself.
+- `mods/factory` (new): a control room for an agent factory that works the
+  GitHub issues of the monorepo. It comes with the theme Factory: choose it
+  for a space (right-click > Theme... > Custom > Factory) and that space's
+  first tab gets an assembly line (intake, build, verify, review, shipped)
+  with a card per issue, gauges, the crew of agents, the intake queue with
+  Dispatch, and signals; its terminals stay below as the small prompt area.
+  Choose another theme and the room goes. How a factory reports to it:
+  `mods/factory/README.md`.
 - `mods/agent-history` (new): closed Claude Code and Codex conversations,
   newest first, to resume one in a new tab. A popup (Cmd-Y) and a side panel.
   `history.py` reads `~/.claude/projects` and `~/.codex` on this computer
@@ -74,6 +82,10 @@ from Herdr's own.
   decor shows the live sky over Oslo and a lake-and-volcano landscape behind
   the terminals (`themes/art/backdrops/custom-sakura-lofi.svg`, drawn by
   `make_backdrop.py` in the same folder).
+- `themes/custom-factory.json`: night shift on the factory floor, steel
+  grey with safety amber and cyan, faint gears behind the agents list
+  (`themes/art/custom-factory.svg`). Choosing it for a space also brings the
+  factory control room (`mods/factory`) into that space.
 
 ### Scripts
 
@@ -87,6 +99,10 @@ from Herdr's own.
   `pr.state` (asked of `gh` at most every three minutes). This is what covers
   Codex and any other agent without hooks. "Clear PR" in a tab's right-click
   menu takes the labels off and leaves that tab alone (`pr.off`).
+- `bin/factory-room.py`: puts the factory control room into a space, or
+  takes it out (`--space <id> --on|--off`), by editing Herdr's layout document
+  as `move-to-space.py` does. `space-menu` and `spaces-flat` run it when the
+  theme Factory is chosen for a space, or another theme after it.
 - `bin/claude-pr.py`: a Claude Code `PostToolUse` hook (Bash). It writes the
   same labels the moment a session opens a pull request — the URL a command
   printed, unless the command only read pull requests (`gh pr list`, `gh pr

@@ -21,6 +21,8 @@
 !/mods/space-menu/
 !/mods/spaces-flat/
 !/mods/tabs-drag/
+!/mods/factory/
+/mods/factory/*.local.json
 # Written by Herdr into every mod folder.
 /mods/*/gpui-kit.d.ts
 /mods/*/jsconfig.json

@@ -31,6 +31,20 @@ import { run, props, closeOverlay, openOverlay, theme, themes, settings, layouts
 // Themes made for spaces carry this prefix: that's their category.
 const CUSTOM = "custom-";
 
+// The theme that brings the factory control room (the `factory` mod's panes) into a
+// space: choosing it puts them in, choosing another takes them out (bin/factory-room.py).
+const FACTORY_THEME = "custom-factory";
+const isFactory = (th) => th?.light === FACTORY_THEME || th?.dark === FACTORY_THEME;
+function factoryRoom(spaceId, on) {
+  const s = spaces().find((x) => x.id === spaceId);
+  const args = ["-I", `${appHome()}/bin/factory-room.py`, "--space", String(spaceId).split("/").pop(), on ? "--on" : "--off",
+    ...(s?.machine ? ["--on-machine", s.machine] : [])];
+  const fail = (body) => notify({ title: on ? "Couldn't build the factory room" : "Couldn't take the factory room out", body, level: "error" });
+  exec("python3", args)
+    .then((r) => { if (r.code !== 0) fail((r.stdout || r.stderr).trim().slice(0, 200)); })
+    .catch((e) => fail(String(e)));
+}
+
 // "custom-warm-sand" reads "Warm sand"; "atom-one-dark" reads "Atom one dark".
 function pretty(name) {
   const s = (name.startsWith(CUSTOM) ? name.slice(CUSTOM.length) : name).replace(/-/g, " ");
@@ -106,6 +120,7 @@ function setSpaceTheme(spaceId, name) {
   const stored = shared("space.themes") ?? {};
   const std = standardTheme();
   const own = { ...(stored.spaces ?? {}) };
+  const before = own[spaceId] ?? std;
   if (name == null) delete own[spaceId];
   else {
     const light = Boolean(themes().find((x) => x.name === name)?.light);
@@ -114,6 +129,8 @@ function setSpaceTheme(spaceId, name) {
     else own[spaceId] = next;
   }
   setShared("space.themes", { ...stored, default: std, spaces: own });
+  const after = own[spaceId] ?? std;
+  if (isFactory(after) !== isFactory(before)) factoryRoom(spaceId, isFactory(after));
 }
 
 // Where a space is now: its first terminal's live folder, else where it was made.

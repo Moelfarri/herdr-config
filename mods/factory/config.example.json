@@ -1,0 +1,13 @@
+{
+  "about": "Copy to config.local.json (kept out of Git) and fill in. host: the GitHub host (github.com, or a GitHub Enterprise host). owner/repo: the repository whose issues the floor works. title: the floor's title. watch_label: only issues with this label enter the line (null: every open issue). worker: what Dispatch tells a new Claude Code worker, as one string or a list of lines; {n} is the issue number, {repo} owner/repo, {host} the host. Leave it out for a plain task that asks before it pushes, opens a pull request or writes on the issue.",
+  "host": "github.com",
+  "owner": "your-org",
+  "repo": "your-repo",
+  "title": "Factory",
+  "watch_label": null,
+  "worker": [
+    "You are a worker on the factory floor. I ask you to start on GitHub issue #{n} in {repo} now.",
+    "Read it with `gh issue view {n} -R {host}/{repo} --comments`, and work in your own git worktree on a new branch.",
+    "Ask me before you push, open a pull request, or write on or change the issue."
+  ]
+}

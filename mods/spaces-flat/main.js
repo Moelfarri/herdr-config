@@ -18,7 +18,7 @@
 
 import { View, div, svg } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
-import { spaces, machines, panes, run, openOverlay, exec, hc, theme, themes, settings, shared, setShared, watchFolder, window, layout, agents } from "herdr";
+import { spaces, machines, panes, run, openOverlay, exec, hc, theme, themes, settings, shared, setShared, watchFolder, window, layout, agents, appHome, notify } from "herdr";
 
 // The theme shown now, both halves (Herdr shows the one for the light or dark appearance).
 function shownTheme() {
@@ -28,6 +28,20 @@ function shownTheme() {
 const sameTheme = (a, b) => a?.light === b?.light && a?.dark === b?.dark;
 // How long a space switch waits for its theme to show before a change counts as a pick.
 const THEME_SETTLE_MS = 2000;
+
+// The theme that brings the factory control room into a space (as in space-menu): a pick
+// of it puts the room in, a pick of another takes it out (bin/factory-room.py).
+const FACTORY_THEME = "custom-factory";
+const isFactory = (th) => th?.light === FACTORY_THEME || th?.dark === FACTORY_THEME;
+function factoryRoom(spaceId, on) {
+  const s = spaces().find((x) => x.id === spaceId);
+  const args = ["-I", `${appHome()}/bin/factory-room.py`, "--space", String(spaceId).split("/").pop(), on ? "--on" : "--off",
+    ...(s?.machine ? ["--on-machine", s.machine] : [])];
+  const fail = (body) => notify({ title: on ? "Couldn't build the factory room" : "Couldn't take the factory room out", body, level: "error" });
+  exec("python3", args)
+    .then((r) => { if (r.code !== 0) fail((r.stdout || r.stderr).trim().slice(0, 200)); })
+    .catch((e) => fail(String(e)));
+}
 
 function find(node, id) {
   if (node?.id === id) return node;
@@ -337,6 +351,9 @@ export default class Spaces extends View {
     // Standard's theme picked: the space goes back to Standard (no theme of its own).
     if (!sameTheme(now, standard)) kept[active] = now;
     setShared("space.themes", { default: standard, spaces: kept });
+    const before = own[active] ?? standard;
+    const after = kept[active] ?? standard;
+    if (isFactory(after) !== isFactory(before)) factoryRoom(active, isFactory(after));
   }
 
   menu(w) {

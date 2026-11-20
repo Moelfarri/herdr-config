@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="320" viewBox="0 0 160 320">
+  <!-- Faint factory-floor art behind the agents panel (custom-factory theme). Original drawing. -->
+  <g fill="none" stroke="#f2b33d" stroke-opacity="0.10" stroke-width="6">
+    <circle cx="112" cy="232" r="30"/>
+    <path d="M112 186v14M112 264v14M66 232h14M144 232h14M79.5 199.5l10 10M134.5 254.5l10 10M79.5 264.5l10-10M134.5 209.5l10-10" stroke-linecap="round"/>
+  </g>
+  <circle cx="112" cy="232" r="9" fill="#f2b33d" fill-opacity="0.09"/>
+  <g fill="none" stroke="#5cc5d0" stroke-opacity="0.08" stroke-width="4">
+    <circle cx="58" cy="176" r="17"/>
+    <path d="M58 152v8M58 192v8M34 176h8M74 176h8M41 159l6 6M69 187l6 6M41 193l6-6M69 165l6-6" stroke-linecap="round"/>
+  </g>
+  <rect x="0" y="292" width="160" height="10" fill="#e8e4da" fill-opacity="0.05"/>
+  <g fill="#e8e4da" fill-opacity="0.06">
+    <circle cx="14" cy="297" r="3"/><circle cx="46" cy="297" r="3"/><circle cx="78" cy="297" r="3"/><circle cx="110" cy="297" r="3"/><circle cx="142" cy="297" r="3"/>
+  </g>
+  <g fill="#f2b33d" fill-opacity="0.10">
+    <path d="M0 320 10 306h12L12 320zM24 320l10-14h12l-10 14zM48 320l10-14h12l-10 14zM72 320l10-14h12l-10 14zM96 320l10-14h12l-10 14zM120 320l10-14h12l-10 14zM144 320l10-14h6v2l-8 12z"/>
+  </g>
+</svg>
